@@ -1,0 +1,8 @@
+{
+	"dev" : {
+		"driver" : "mysql",
+		"username" : "root",
+		"database" : "shopping_portal",
+		"password" : "root"
+	}
+}
