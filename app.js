@@ -1,42 +1,50 @@
 var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-
-var seller = require('./routes/seller');
-
+var validator = require('express-validator');
+var inventory = require('./routes/inventory');
+var validate = require('express-jsonschema').validate;
 var app = express();
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(validator()); // this line must be immediately after express.bodyParser()!
 app.use(cookieParser());
-
-app.use('/seller', seller);
+app.use('/inventory', inventory);
 
 //set the server environment
 var env = app.get('env') == 'development' ? 'dev' : app.get('env');
 var port = process.env.PORT || 8080;
 
 // error handlers
+
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+app.use(function(err, req, res, next) {
+	if(err.status == 404){
+		res.json({
+			"status" : "400",
+			"message" : "Not found",
+			"data" : {},
+			"errors" : err
+		});
+	}
+	next(err);
 });
 
 // development error handler
 // will print stacktrace
-if (app.get('env') === 'development') {
+if (app.get('env') === 'development') {	
   app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    /*res.render('error', {
-      message: err.message,
-      error: err
-    });*/
+	  if(err.status == 400){
+			res.json({
+				"status" : "400",
+				"message" : "Invalid request",
+				"data" : {},
+				"errors" : err
+			});
+		}
   });
 }
 
@@ -49,6 +57,5 @@ app.use(function(err, req, res, next) {
     error: {}
   });*/
 });
-
 
 module.exports = app;
