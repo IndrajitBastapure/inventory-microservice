@@ -60,15 +60,8 @@ module.exports = function(sequelize, DataTypes) {
 }
 
 //This will create the table 
-/*
-User.sync().then(function () {
-  // Table created
-  return User.create({
-    firstName: 'John',
-    lastName: 'Hancock'
-  });
-});
-*/
+//inventory.sync();
+
 
 // Sync all models that aren't already in the database
 //sequelize.sync();

@@ -20,60 +20,74 @@ process.on("unhandledRejection", function(reason, promise){
 });
 
 //Get all the inventories
-router.get('/', function(req, res){	
+router.get('/', function(req, res){
 	var inventory = Inventory.build();
 	
 	inventory.retrieveAll(function(inventory) {
-		var result = {
-			"status" : "200",
-			"description" : "",			
+		var result = {				
 			"data" : { "inventories" : inventory },
 			"errors" : []
 		  }
-		if (inventory) {	
+		if (inventory.length >= 1) {	
 			result.description = "Returning the inventories";
-			res.json(result);
+			result.status = "200";
+			res.status(200);
+			res.json(result);			
 		} else {		  
 			result.description = "inventory not found",
-			res.json(result);
+			result.status = "404";
+			res.status(200);
+			res.json(result);			
 		}
 	  }, function(error) {
-			result.description = "inventory not found",
+			result.status = "500";
+			result.description = "Some error occurred";
 			result.errors = error;
-			res.json(result);		
+			res.status(500);
+			res.json(result);					
 	  });
 });
 
 //Get particular inventory based on id 
 router.get('/:id', function(req, res){
 	var inventory = Inventory.build();
-	req.checkParams("id", "Id should be integer number only.").isInt();	
+	req.checkParams("id", "Id should be integer number only.").isInt();
 	var errors = req.validationErrors();
-	if (errors) {		
+	if (errors) {
+		res.status(200);
 		res.json({
 			"status" : "400",
-			"description" : "Validation error",			
+			"description" : "Validation error",
 			"errors" : errors,
-			"data" : {}
+			"data" : []
 		  });
 	}else{
 		inventory.retrieveById(req.params.id, function(inventory) {
-		var result = {
-			"status" : "200",
+		var data = [];
+		var result = {			
 			"description" : "",			
-			"errors" : [],
-			"data" : inventory
-		  };
+			"errors" : []
+		  };		  
 		if (inventory) {
-			result.description = "Returning the inventory";			
-			res.json(result);
+			result.description = "Returning the inventory";
+			result.status = "200";
+			data[0] = inventory;
+			result.data = data;
+			res.status(200);
+			res.json(result);			
 		} else {
-			result.description = "inventory not found",
-			res.json(result);
+			result.description = "inventory not found";
+			result.status = "404";
+			result.data = data;
+			res.status(200);
+			res.json(result);			
 		}
 	  }, function(error) {
-			result.description = "inventory not found",
+			result.status = "500";
+			result.data = data;
+			result.description = "Some error occurred";
 			result.errors = error;
+			res.status(500);
 			res.json(result);			
 	  });
 	}	
@@ -87,22 +101,24 @@ router.post('/create', function(req, res){
 	var quantity = req.body.quantity;
 	
 	// VALIDATION
-	req.checkBody('userId', 'user Id should be integer number only').notEmpty().isInt();
-	req.checkBody('productId', 'product Id should be integer number only').notEmpty().isInt();
-	req.checkBody('unitPrice', 'unit price should be integer number only').notEmpty().isInt();
-	req.checkBody('quantity', 'quantity should be integer number only').notEmpty().isInt();
+	req.checkBody('userId', 'invalid user Id').notEmpty().isInt();
+	req.checkBody('productId', 'invalid product Id').notEmpty().isInt();
+	req.checkBody('unitPrice', 'invalid unit price').notEmpty().isDecimal();
+	req.checkBody('quantity', 'invalid quantity').notEmpty().isInt();
 	
 	var errors = req.validationErrors();
-	if (errors) {		
+	if (errors) {
+		res.status(200);
 		res.json({
 			"status" : "400",
-			"description" : "Validation error",			
+			"description" : "Validation error",		
 			"errors" : errors,
-			"data" : {}
+			"data" : []
 		  });
 	}else{		
 		var inventory = Inventory.build({ userId : userId, productId : productId, unitPrice : unitPrice, quantity : quantity });
 		inventory.add(function(inventory){		
+			res.status(200);
 			res.json({ 
 					"status" : "200",
 					"description " : "inventory created.",
@@ -111,9 +127,10 @@ router.post('/create', function(req, res){
 				});
 		},
 		function(err) {
+			res.status(500);
 			res.json({ 
-					"status" : "400",
-					"description " : "failed to create inventory.",
+					"status" : "500",
+					"description " : "Some error occurred.",
 					"errors" : err,
 					data : {}
 				});
@@ -127,7 +144,8 @@ router.delete('/delete/:id', function(req, res){
 	req.checkParams("id", "Id should be integer number only.").isInt();
 	//console.log(err);
 	var errors = req.validationErrors();
-	if (errors) {		
+	if (errors) {
+		res.status(200);
 		res.json({
 			"status" : "400",
 			"description" : "Validation error",			
@@ -136,66 +154,79 @@ router.delete('/delete/:id', function(req, res){
 		  });
 	}else{
 		inventory.removeById(req.params.id, function(recordsDeleted) {
-			var result = {
-					"status" : "200",
+			var result = {					
 					"description" : "",					
 					"errors" : [],
 					"data" : {
 						"recordsDeleted" : recordsDeleted
 					}	
 				};
+				
 			if (recordsDeleted) {
 				result.description = "inventory removed.";
+				result.status = "200";
+				res.status(200);
 				res.json(result);
 			} else {
 				result.description = "inventory not found.";
+				result.status = "404";
+				res.status(200);
 				res.json(result);
 			}
 		  }, function(error) {
-			result.description = "inventory not found.";
+			result.description = "Some error occurred.";
+			result.status = "500";
 			result.errors = error;
+			res.status(500);
 			res.json(result);
 		  });
 	}
 });
 
-//Update the seller
-router.put('/update/:id', function(req, res){	
+//Update the inventory
+router.put('/update/:id', function(req, res){
 	var inventory = Inventory.build();
 	inventory.unitPrice = req.body.unitPrice;
 	inventory.quantity = req.body.quantity;
 	req.checkParams("id", "Id should be integer number only.").isInt();
-	req.checkBody('unitPrice', 'unit price should be integer number only.').notEmpty().isInt();
-	req.checkBody('quantity', 'quantity should be integer number only.').notEmpty().isInt();
+	req.checkBody('unitPrice', 'unit price is invalid.').notEmpty().isDecimal();
+	req.checkBody('quantity', 'quantity is invalid.').notEmpty().isInt();
 	//console.log(err);
 	var errors = req.validationErrors();
-	if (errors) {		
+	if (errors) {
+		res.status(200);
 		res.json({
 			"status" : "400",
-			"description" : "Validation error",		
+			"description" : "Validation error",
 			"errors" : errors,
 			"data" : {}
 		  });
 	}else{		
 		inventory.updateById(req.params.id, function(recordsUpdated) {
-			var result = {
-						"status" : "200",
-						"description" : "",			
+			var result = {						
+						"description" : "",		
 						"data" : {
-							"recordsUpdated" : recordsUpdated
+							"recordsUpdated" : recordsUpdated[0]
 						},
 						"errors" : []
-					}		
-			if (inventory >= 1) {				
+					}
+			console.log(recordsUpdated[0]);
+			if (recordsUpdated[0] >= 1) {
 			  result.description = "inventory updated.";
+			  result.status = "200";
+			  res.status(200);
 			  res.json(result);
 			} else {
 			  result.description = "inventory not found";
+			  result.status = "404";
+			  res.status(200);
 			  res.json(result);
 			}
 		  }, function(error) {
-			result.description = "inventory not found";
+			result.description = "Some error occurred.";
+			result.status = "500";
 			result.errors = error;
+			res.status(500);
 			res.json(result);
 		  });
 	}

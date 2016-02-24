@@ -13,11 +13,18 @@
     "express-jsonschema": "^1.1.0",
     "express-validator": "^2.19.1",
     "jade": "~1.11.0",
+    "jasmine-node": "^1.14.5",
     "morgan": "~1.6.1",
     "mysql": "^2.10.2",
     "nodemon": "^1.8.1",
+    "request": "^2.69.0",
     "sequelize": "^3.19.2",
     "serve-favicon": "~2.3.0",
-    "validator": "^4.8.0"
+    "supertest": "^1.2.0",
+    "validator": "^4.8.0",
+    "winston": "^2.1.1"
+  },
+  "devDependencies": {
+    "jasmine": "^2.4.1"
   }
 }
