@@ -4,6 +4,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var validator = require('express-validator');
 var inventory = require('./routes/inventory');
+var health = require('./routes/health');
 var validate = require('express-jsonschema').validate;
 var app = express();
 
@@ -13,6 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(validator()); // this line must be immediately after express.bodyParser()!
 app.use(cookieParser());
 app.use('/inventory', inventory);
+app.use('/', health);
 
 //set the server environment
 var env = app.get('env') == 'development' ? 'dev' : app.get('env');
