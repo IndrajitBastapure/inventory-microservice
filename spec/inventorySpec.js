@@ -89,7 +89,7 @@ describe("inventory test cases", function() {
 		});
 	});
 	
-	xdescribe("test cases to create record", function() {
+	describe("test cases to create record", function() {
 		
 		it('Should insert record', function testPth(done) {
 			request.post({url:base_url+'create', form: {
@@ -98,13 +98,19 @@ describe("inventory test cases", function() {
 				"unitPrice" : "50",
 				"quantity" : "7"
 			}}, function(error, response, body) {
-				body = JSON.parse(response.body);				
-				expect(response.statusCode).toBe(200);
-				done();
+				body = JSON.parse(response.body);		
+				expect(response.statusCode).toBe(200);				
+				console.log(base_url+"delete/"+body.data.id);
+				//Delete the inserted record
+				request.del(base_url+"delete/"+body.data.id, function(error, response, body) {					
+					body = JSON.parse(response.body);						
+					expect(body.data.recordsDeleted).toBe(1);					
+					done();
+				});			
 			});
 		});
 		
-		it('Should throw validation error', function testPth(done) {
+		xit('Should throw validation error', function testPth(done) {
 			request.post({url:base_url+'create', form: {
 				"userId" : "2d",
 				"productId" : "2",
@@ -117,7 +123,7 @@ describe("inventory test cases", function() {
 			});
 		});
 		
-		it('Should throw validation error', function testPth(done) {
+		xit('Should throw validation error', function testPth(done) {
 			request.post({url:base_url+'create', form: {				
 				"productId" : "2",
 				"unitPrice" : "50",

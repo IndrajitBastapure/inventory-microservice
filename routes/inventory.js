@@ -24,34 +24,36 @@ router.get('/', function(req, res){
 	var inventory = Inventory.build();
 	
 	inventory.retrieveAll(function(inventory) {
-		var result = {				
-			"data" : { "inventories" : inventory },
-			"errors" : []
+		var result = {
+			"status" : "",	
+			"description" : "",
+			"errors" : [],
+			"data" : { "inventories" : inventory }
 		  }
 		if (inventory.length >= 1) {	
-			result.description = "Returning the inventories";
 			result.status = "200";
+			result.description = "Returning the inventories";			
 			res.status(200);
-			res.json(result);			
-		} else {		  
-			result.description = "inventory not found",
+			res.json(result);
+		} else {
 			result.status = "404";
+			result.description = "inventory not found",			
 			res.status(200);
-			res.json(result);			
+			res.json(result);		
 		}
 	  }, function(error) {
 			result.status = "500";
-			result.description = "Some error occurred";
+			result.description = "internal server error";			
 			result.errors = error;
 			res.status(500);
-			res.json(result);					
+			res.json(result);				
 	  });
 });
 
 //Get particular inventory based on id 
 router.get('/:id', function(req, res){
 	var inventory = Inventory.build();
-	req.checkParams("id", "Id should be integer number only.").isInt();
+	req.checkParams("id", "Id should be integer number only").isInt();
 	var errors = req.validationErrors();
 	if (errors) {
 		res.status(200);
@@ -64,33 +66,35 @@ router.get('/:id', function(req, res){
 	}else{
 		inventory.retrieveById(req.params.id, function(inventory) {
 		var data = [];
-		var result = {			
+		var result = {		
+			"status" : "",
 			"description" : "",			
-			"errors" : []
-		  };		  
+			"errors" : [],
+			"data" : ""			
+		  };
 		if (inventory) {
-			result.description = "Returning the inventory";
 			result.status = "200";
+			result.description = "Returning the inventory";			
 			data[0] = inventory;
 			result.data = data;
 			res.status(200);
-			res.json(result);			
+			res.json(result);
 		} else {
-			result.description = "inventory not found";
 			result.status = "404";
+			result.description = "inventory not found";
 			result.data = data;
 			res.status(200);
-			res.json(result);			
+			res.json(result);
 		}
 	  }, function(error) {
 			result.status = "500";
-			result.data = data;
-			result.description = "Some error occurred";
+			result.description = "internal server error";
 			result.errors = error;
+			result.data = data;
 			res.status(500);
-			res.json(result);			
+			res.json(result);
 	  });
-	}	
+	}
 });
 
 //Create new inventory
@@ -111,28 +115,28 @@ router.post('/create', function(req, res){
 		res.status(200);
 		res.json({
 			"status" : "400",
-			"description" : "Validation error",		
+			"description" : "Validation error",
 			"errors" : errors,
 			"data" : []
 		  });
-	}else{		
+	}else{
 		var inventory = Inventory.build({ userId : userId, productId : productId, unitPrice : unitPrice, quantity : quantity });
 		inventory.add(function(inventory){		
 			res.status(200);
 			res.json({ 
 					"status" : "200",
-					"description " : "inventory created.",
+					"description " : "inventory created",
 					"errors" : [],
 					data : inventory
 				});
 		},
 		function(err) {
 			res.status(500);
-			res.json({ 
+			res.json({
 					"status" : "500",
-					"description " : "Some error occurred.",
+					"description " : "internal server error",
 					"errors" : err,
-					data : {}
+					data : []
 				});
 		});
 	}
@@ -141,7 +145,7 @@ router.post('/create', function(req, res){
 //Delete the existing inventory
 router.delete('/delete/:id', function(req, res){
 	var inventory = Inventory.build();
-	req.checkParams("id", "Id should be integer number only.").isInt();
+	req.checkParams("id", "Id should be integer number only").isInt();
 	//console.log(err);
 	var errors = req.validationErrors();
 	if (errors) {
@@ -150,32 +154,33 @@ router.delete('/delete/:id', function(req, res){
 			"status" : "400",
 			"description" : "Validation error",			
 			"errors" : errors,
-			"data" : {}
+			"data" : []
 		  });
 	}else{
 		inventory.removeById(req.params.id, function(recordsDeleted) {
-			var result = {					
-					"description" : "",					
+			var result = {		
+					"status" : "",
+					"description" : "",				
 					"errors" : [],
 					"data" : {
 						"recordsDeleted" : recordsDeleted
-					}	
+					}
 				};
 				
 			if (recordsDeleted) {
-				result.description = "inventory removed.";
 				result.status = "200";
+				result.description = "inventory removed";				
 				res.status(200);
 				res.json(result);
 			} else {
-				result.description = "inventory not found.";
 				result.status = "404";
+				result.description = "inventory not found";				
 				res.status(200);
 				res.json(result);
 			}
 		  }, function(error) {
-			result.description = "Some error occurred.";
 			result.status = "500";
+			result.description = "internal server error";			
 			result.errors = error;
 			res.status(500);
 			res.json(result);
@@ -199,12 +204,13 @@ router.put('/update/:id', function(req, res){
 			"status" : "400",
 			"description" : "Validation error",
 			"errors" : errors,
-			"data" : {}
+			"data" : []
 		  });
-	}else{		
+	}else{
 		inventory.updateById(req.params.id, function(recordsUpdated) {
-			var result = {						
-						"description" : "",		
+			var result = {					
+						"status" : "",
+						"description" : "",						
 						"data" : {
 							"recordsUpdated" : recordsUpdated[0]
 						},
@@ -212,19 +218,19 @@ router.put('/update/:id', function(req, res){
 					}
 			console.log(recordsUpdated[0]);
 			if (recordsUpdated[0] >= 1) {
-			  result.description = "inventory updated.";
 			  result.status = "200";
+			  result.description = "inventory updated";			  
 			  res.status(200);
 			  res.json(result);
 			} else {
-			  result.description = "inventory not found";
 			  result.status = "404";
+			  result.description = "inventory not found";			  
 			  res.status(200);
 			  res.json(result);
 			}
 		  }, function(error) {
-			result.description = "Some error occurred.";
 			result.status = "500";
+			result.description = "internal server error";			
 			result.errors = error;
 			res.status(500);
 			res.json(result);
