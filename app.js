@@ -18,13 +18,12 @@ app.use('/', health);
 
 //set the server environment
 var env = app.get('env') == 'development' ? 'dev' : app.get('env');
-console.log(app.get('env'));
 var port = process.env.PORT || 8080;
 
 // error handlers
 app.use(function(err, req, res, next) {
 	
-	logger.info(res);
+	logger.info(err);
 	
 	if(err.status == 400){
 			res.json({
@@ -40,8 +39,8 @@ app.use(function(err, req, res, next) {
 			"message" : "Not found",
 			"data" : {},
 			"errors" : err
-		});		
-	}	
+		});
+	}
 });
 
 module.exports = app;

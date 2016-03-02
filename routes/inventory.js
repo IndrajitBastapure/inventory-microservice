@@ -1,6 +1,10 @@
 var express = require('express');
 var router = express.Router();
 var Sequelize = require('sequelize');
+var async = require('async');
+var ServiceProvider = require('./services');
+var request = require("request");
+var services = new ServiceProvider();
 
 //db config
 var env = "dev";
@@ -21,11 +25,12 @@ process.on("unhandledRejection", function(reason, promise){
 
 //Get all the inventories
 router.get('/', function(req, res){
+
 	var inventory = Inventory.build();
 	
 	inventory.retrieveAll(function(inventory) {
 		var result = {
-			"status" : "",	
+			"status" : "",
 			"description" : "",
 			"errors" : [],
 			"data" : { "inventories" : inventory }
@@ -106,38 +111,82 @@ router.post('/create', function(req, res){
 	
 	// VALIDATION
 	req.checkBody('userId', 'invalid user Id').notEmpty().isInt();
-	req.checkBody('productId', 'invalid product Id').notEmpty().isInt();
+	req.checkBody('productId', 'invalid product Id').notEmpty().isInt();	
 	req.checkBody('unitPrice', 'invalid unit price').notEmpty().isDecimal();
 	req.checkBody('quantity', 'invalid quantity').notEmpty().isInt();
 	
+	var result = {		
+			"status" : "",
+			"description" : "",			
+			"errors" : [],
+			"data" : []	
+		  };
+
 	var errors = req.validationErrors();
 	if (errors) {
 		res.status(200);
-		res.json({
-			"status" : "400",
-			"description" : "Validation error",
-			"errors" : errors,
-			"data" : []
-		  });
+		result.status = "400";
+		result.description = "Validation error";
+		result.errors = errors;
+		res.json(result);
 	}else{
-		var inventory = Inventory.build({ userId : userId, productId : productId, unitPrice : unitPrice, quantity : quantity });
-		inventory.add(function(inventory){		
-			res.status(200);
-			res.json({ 
-					"status" : "200",
-					"description " : "inventory created",
-					"errors" : [],
-					data : inventory
+	
+		async.parallel([
+			function(callback){
+				services.getService("USERS-SERVICE", function(err, result){
+					var node = result[0];			
+					var url = "http://"+node.Address+":"+node.ServicePort+"/user/"+userId;			
+					request.get(url, function(error, response, body) {
+						body = JSON.parse(body);
+						callback(error, body);
+					});				
 				});
-		},
-		function(err) {
-			res.status(500);
-			res.json({
-					"status" : "500",
-					"description " : "internal server error",
-					"errors" : err,
-					data : []
+			},
+			function(callback){
+				services.getService("PRODUCTS-SERVICE", function(err, result){
+					var node = result[0];			
+					var url = "http://"+node.Address+":"+node.ServicePort+"/product/"+productId;			
+					request.get(url, function(error, response, body) {
+						body = JSON.parse(body);
+						callback(error, body);
+					});
 				});
+			}
+		],
+		// optional callback
+		function(err, results){
+			var userResult = results[0];
+			var productResult = results[1];			
+			if(userResult.status == 404 || userResult.data ==  null){
+				res.status(200);
+				result.description = "User does not exists. Please enter valid user id.";
+				result.status = "404";
+				res.json(result);
+			}else if(productResult.status == 404 || productResult.data ==  null){
+				res.status(200);
+				result.description = "Product does not exists. Please enter valid Product id.";
+				result.status = "404";
+				res.json(result);
+			}else{
+				//Actual inventory creation logic
+				var inventory = Inventory.build({ userId : userId, productId : productId, unitPrice : unitPrice, quantity : quantity });
+				inventory.add(function(inventory){		
+					res.status(200);
+					result.description = "inventory created";
+					result.status = "200";
+					result.errors = [];
+					result.data = inventory
+					res.json(result);
+				},
+				function(err) {
+					res.status(500);
+					result.description = "internal server error";
+					result.status = "500";
+					result.errors = err;
+					result.data = []
+					res.json(result);
+				});
+			}
 		});
 	}
 });
@@ -146,7 +195,6 @@ router.post('/create', function(req, res){
 router.delete('/delete/:id', function(req, res){
 	var inventory = Inventory.build();
 	req.checkParams("id", "Id should be integer number only").isInt();
-	//console.log(err);
 	var errors = req.validationErrors();
 	if (errors) {
 		res.status(200);
@@ -196,7 +244,6 @@ router.put('/update/:id', function(req, res){
 	req.checkParams("id", "Id should be integer number only.").isInt();
 	req.checkBody('unitPrice', 'unit price is invalid.').notEmpty().isDecimal();
 	req.checkBody('quantity', 'quantity is invalid.').notEmpty().isInt();
-	//console.log(err);
 	var errors = req.validationErrors();
 	if (errors) {
 		res.status(200);
@@ -216,7 +263,7 @@ router.put('/update/:id', function(req, res){
 						},
 						"errors" : []
 					}
-			console.log(recordsUpdated[0]);
+					
 			if (recordsUpdated[0] >= 1) {
 			  result.status = "200";
 			  result.description = "inventory updated";			  

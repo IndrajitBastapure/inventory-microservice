@@ -17,19 +17,24 @@ describe("inventory test cases", function() {
 		server.close();
 	});
 	
-	xdescribe("test cases for retrieving all records", function() {
+	describe("test cases for retrieving all records", function() {
 		
-		it("should return status code 200", function(done) {
-			request.get(base_url, function(error, response, body) {		
-				expect(response.statusCode).toBe(200);
+		it("should return record not found", function(done) {
+			request.get(base_url, function(error, response, body) {
+				body = JSON.parse(response.body);
+				expect(body.data.inventories.length).toBe(0);
+				expect(body.status).toBe('404');
+				expect(body.description).toBe('inventory not found');
 				done();
 			});
 		});
 		
-		it("should return all the records present in db", function(done) {
+		xit("should return all the records present in db", function(done) {
 			request.get(base_url, function(error, response, body) {
 				body = JSON.parse(response.body);
-				expect(body.data.inventories.length).toBe(2);
+				expect(body.data.inventories.length).toBe(7);
+				expect(body.status).toBe('200');
+				expect(body.description).toBe('Returning the inventories');
 				done();
 			});
 		});
@@ -41,22 +46,27 @@ describe("inventory test cases", function() {
 			request.get(base_url+"k", function(error, response, body) {
 				body = JSON.parse(response.body);
 				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
 				done();
 			});
 		});
 	
 		it('Should not return any record', function testPath(done) {
-			request.get(base_url+"5", function(error, response, body) {
+			request.get(base_url+"55", function(error, response, body) {
 				body = JSON.parse(response.body);
 				expect(body.data.length).toBe(0);
+				expect(body.status).toBe('404');
+				expect(body.description).toBe('inventory not found');
 				done();
 			});
 		});
 			
 		it('Should return only matched record', function testPath(done) {
-			request.get(base_url+"2", function(error, response, body) {
-				body = JSON.parse(response.body);		
+			request.get(base_url+"1", function(error, response, body) {
+				body = JSON.parse(response.body);
 				expect(body.data.length).toBe(1);
+				expect(body.status).toBe('200');
+				expect(body.description).toBe('Returning the inventory');
 				done();
 			});
 		});
@@ -65,9 +75,11 @@ describe("inventory test cases", function() {
 	xdescribe("test cases to delete particular record", function() {
 		
 		it('Should return inventory not found', function testPath(done) {		
-			request.del(base_url+"delete/7", function(error, response, body) {
+			request.del(base_url+"delete/77", function(error, response, body) {
 				body = JSON.parse(response.body);		
 				expect(body.data.recordsDeleted).toBe(0);
+				expect(body.status).toBe('404');
+				expect(body.description).toBe('inventory not found');
 				done();
 			});
 		});
@@ -76,30 +88,34 @@ describe("inventory test cases", function() {
 			request.del(base_url+"delete/7d", function(error, response, body) {
 				body = JSON.parse(response.body);						
 				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
 				done();
 			});
 		});
 		
 		it('Should delete particular record only', function testPath(done) {		
-			request.del(base_url+"delete/2", function(error, response, body) {
-				body = JSON.parse(response.body);						
+			request.del(base_url+"delete/4", function(error, response, body) {
+				body = JSON.parse(response.body);
 				expect(body.data.recordsDeleted).toBe(1);
+				expect(body.status).toBe('200');
+				expect(body.description).toBe('inventory removed');
 				done();
 			});
 		});
 	});
 	
-	describe("test cases to create record", function() {
+	xdescribe("test cases to create record", function() {
 		
 		it('Should insert record', function testPth(done) {
 			request.post({url:base_url+'create', form: {
-				"userId" : "2",
-				"productId" : "2",
+				"userId" : "1",
+				"productId" : "1",
 				"unitPrice" : "50",
 				"quantity" : "7"
 			}}, function(error, response, body) {
-				body = JSON.parse(response.body);		
-				expect(response.statusCode).toBe(200);				
+				body = JSON.parse(response.body);	
+				expect(body.status).toBe('200');
+				expect(body.description).toBe('inventory created');
 				console.log(base_url+"delete/"+body.data.id);
 				//Delete the inserted record
 				request.del(base_url+"delete/"+body.data.id, function(error, response, body) {					
@@ -110,7 +126,7 @@ describe("inventory test cases", function() {
 			});
 		});
 		
-		xit('Should throw validation error', function testPth(done) {
+		it('Should throw validation error', function testPth(done) {
 			request.post({url:base_url+'create', form: {
 				"userId" : "2d",
 				"productId" : "2",
@@ -119,11 +135,129 @@ describe("inventory test cases", function() {
 			}}, function(error, response, body) {
 				body = JSON.parse(response.body);				
 				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
 				done();
 			});
 		});
 		
-		xit('Should throw validation error', function testPth(done) {
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "2",
+				"productId" : "2d",
+				"unitPrice" : "87.5",
+				"quantity" : "9"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);				
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "2",
+				"productId" : "2",
+				"unitPrice" : "87.5c",
+				"quantity" : "9"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);				
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "2",
+				"productId" : "2d",
+				"unitPrice" : "87.5",
+				"quantity" : "y"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);				
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "1",
+				"productId" : "2",
+				"unitPrice" : "50",
+				"quantity" : "7.5"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				console.log(body.status);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');				
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "",
+				"productId" : "2",
+				"unitPrice" : "50",
+				"quantity" : "7.5"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				console.log(body.status);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');				
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "1",
+				"productId" : "",
+				"unitPrice" : "50",
+				"quantity" : "7.5"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				console.log(body.status);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');				
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "1",
+				"productId" : "2",
+				"unitPrice" : "",
+				"quantity" : "7.5"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				console.log(body.status);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');				
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "1",
+				"productId" : "2",
+				"unitPrice" : "50",
+				"quantity" : ""
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				console.log(body.status);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');				
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
 			request.post({url:base_url+'create', form: {				
 				"productId" : "2",
 				"unitPrice" : "50",
@@ -131,53 +265,163 @@ describe("inventory test cases", function() {
 			}}, function(error, response, body) {
 				body = JSON.parse(response.body);				
 				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {				
+				"userId" : "2",
+				"unitPrice" : "50",
+				"quantity" : "7"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);				
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {				
+				"userId" : "2",
+				"productId" : "2",				
+				"quantity" : "7"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);				
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.post({url:base_url+'create', form: {				
+				"userId" : "2",
+				"productId" : "2",
+				"unitPrice" : "50"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);				
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});		
+		
+		it('Should return user not present', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "2",
+				"productId" : "2",
+				"unitPrice" : "50",
+				"quantity" : "7"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);				
+				expect(body.status).toBe('404');
+				expect(body.description).toBe('User does not exists. Please enter valid user id.');				
+				done();
+			});
+		});
+		
+		it('Should return product not present', function testPth(done) {
+			request.post({url:base_url+'create', form: {
+				"userId" : "1",
+				"productId" : "2",
+				"unitPrice" : "50",
+				"quantity" : "7"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);			
+				expect(body.status).toBe('404');
+				expect(body.description).toBe('Product does not exists. Please enter valid Product id.');				
 				done();
 			});
 		});
 	});
 	
-	describe("test cases to update record", function() {
+	xdescribe("test cases to update record", function() {
 		
-		xit('Should throw validation error', function testPth(done) {
+		it('Should throw validation error', function testPth(done) {
 			request.put({url:base_url+'update/5d', form: {
 				"unitPrice" : "50",
 				"quantity" : "7"
 			}}, function(error, response, body) {
 				body = JSON.parse(response.body);
 				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
 				done();
 			});
 		});
 		
-		xit('Should throw validation error', function testPth(done) {
+		it('Should throw validation error', function testPth(done) {
 			request.put({url:base_url+'update/5', form: {
 				"unitPrice" : "50a",
 				"quantity" : "7"
 			}}, function(error, response, body) {
 				body = JSON.parse(response.body);
 				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
 				done();
 			});
 		});
 		
-		xit('Should return not found', function testPth(done) {
-			request.put({url:base_url+'update/6', form: {
+		it('Should throw validation error', function testPth(done) {
+			request.put({url:base_url+'update/5', form: {
+				"unitPrice" : "50",
+				"quantity" : "7.2"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.put({url:base_url+'update/5d', form: {
+				"unitPrice" : "",
+				"quantity" : "7"
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should throw validation error', function testPth(done) {
+			request.put({url:base_url+'update/5d', form: {
+				"unitPrice" : "50",
+				"quantity" : ""
+			}}, function(error, response, body) {
+				body = JSON.parse(response.body);
+				expect(body.status).toBe('400');
+				expect(body.description).toBe('Validation error');
+				done();
+			});
+		});
+		
+		it('Should return not found', function testPth(done) {
+			request.put({url:base_url+'update/66', form: {
 				"unitPrice" : "50",
 				"quantity" : "7"
 			}}, function(error, response, body) {
 				body = JSON.parse(response.body);
 				expect(body.data.recordsUpdated).toBe(0);
+				expect(body.status).toBe('404');
+				expect(body.description).toBe('inventory not found');
 				done();
 			});
 		});
 		
-		xit('Should update record', function testPth(done) {
-			request.put({url:base_url+'update/4', form: {
+		it('Should update record', function testPth(done) {
+			request.put({url:base_url+'update/1', form: {
 				"unitPrice" : "85",
 				"quantity" : "18"
 			}}, function(error, response, body) {
 				body = JSON.parse(response.body);
 				expect(body.data.recordsUpdated).toBe(1);
+				expect(body.status).toBe('200');
+				expect(body.description).toBe('inventory updated');
 				done();
 			});
 		});
