@@ -1,12 +1,10 @@
 var express = require('express');
-//var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var validator = require('express-validator');
 var inventory = require('./routes/inventory');
 var logger = require('./routes/logger');
 var health = require('./routes/health');
-var validate = require('express-jsonschema').validate;
 var app = express();
 
 app.use(bodyParser.json());
@@ -18,30 +16,32 @@ app.use('/', health);
 
 //set the server environment
 var env = app.get('env') == 'development' ? 'dev' : app.get('env');
-console.log(app.get('env'));
 var port = process.env.PORT || 8080;
 
 // error handlers
 app.use(function(err, req, res, next) {
 	
-	logger.info(res);
+	logger.info(err);
 	
+	//check bad request error
 	if(err.status == 400){
 			res.json({
 				"status" : "400",
 				"message" : "Bad request",
-				"data" : {},
-				"errors" : err
+				"errors" : err,
+				"data" : []				
 			});
 		}
+	
+	//check not found error
 	if(err.status == 404){
 		res.json({
-			"status" : "400",
+			"status" : "404",
 			"message" : "Not found",
-			"data" : {},
-			"errors" : err
-		});		
-	}	
+			"errors" : err,
+			"data" : []		
+		});
+	}
 });
 
 module.exports = app;
