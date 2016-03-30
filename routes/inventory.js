@@ -12,7 +12,9 @@ var config = require('../database.json')[env];
 
 //initialize database connection
 var sequelize = new Sequelize(config.database, config.username,
-config.password
+config.password, {
+	host: process.env.MYSQL_PORT_3306_TCP_ADDR
+}
 );
 
 //import inventoryDao model

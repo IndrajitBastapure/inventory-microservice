@@ -56,6 +56,7 @@ module.exports = function(sequelize, DataTypes) {
 			}
 		}
 	);
+	inventory.sync();
 	return inventory;
 }
 

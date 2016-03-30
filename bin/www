@@ -8,7 +8,13 @@ var app = require('../app');
 var debug = require('debug')('seller-service:server');
 var http = require('http');
 var os = require('os');
-var consul = require('consul')();
+
+var options = {
+  "host": process.env.CONSUL_PORT_8500_TCP_ADDR,
+  "port": process.env.CONSUL_PORT_8500_TCP_PORT
+
+}
+var consul = require('consul')(options);
 
 /**
  * Constants
@@ -108,7 +114,7 @@ function registerConsul(addr){
     "name": INVENTORY_SERVICE_NAME
   };
   if(typeof addr !== 'string'){
-    serviceData.address = os.hostname();
+    serviceData.address = process.env.INVENTORY_DOCKER_CONTAINER_NAME;
     serviceData.port = addr.port;
     serviceData.tags = ["nodeJS"];
     serviceData.check = {
