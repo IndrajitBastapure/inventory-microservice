@@ -5,6 +5,23 @@
   "scripts": {
     "start": "nodemon ./bin/www"
   },
+  "jshintConfig": {
+	"laxcomma": true,
+	"strict": true,
+	"-W080": true,
+	"-W041": true,
+	"sub": true,
+	"smarttabs": true,
+	"maxerr": 100,
+	"rhino": false,
+	"eqeqeq": false,
+	"noempty": true,
+	"eqnull": false,
+	"curly": true,
+	"esnext": true,
+	"node": true,
+	"indent": 4
+  },
   "dependencies": {
     "async": "^1.5.2",
     "body-parser": "~1.13.2",

@@ -1,7 +1,11 @@
+"use strict";
+
+/* globals describe, it, before, beforeEach, expect, afterEach, xdescribe, xit */
+
 var request = require("request");
 var app = require("../app");
 
-var base_url = "http://localhost:3000/inventory/"
+var base_url = "http://localhost:3000/inventory/";
 
 describe("inventory test cases", function() {
 	var server;

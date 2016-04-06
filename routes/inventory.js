@@ -1,3 +1,5 @@
+"use strict";
+
 var express = require('express');
 var router = express.Router();
 var Sequelize = require('sequelize');
@@ -28,17 +30,17 @@ router.get('/', function(req, res){
 
 	//create the instance of inventory to get all the inventories available.
 	var inventory = Inventory.build();
-	
-	//get all inventories
-	inventory.retrieveAll(function(inventory) {
 	//prepare the response format
 		var result = {
 			"status" : "",
 			"description" : "",
 			"errors" : [],
 			"data" : { "inventories" : inventory }
-		  }
-		  
+		  };
+	
+	//get all inventories
+	inventory.retrieveAll(function(inventory) {
+	
 		//return the response based on inventory availability
 		if (inventory.length >= 1) {	
 			result.status = "200";
@@ -47,9 +49,9 @@ router.get('/', function(req, res){
 			res.json(result);
 		} else {
 			result.status = "404";
-			result.description = "inventory not found",			
+			result.description = "inventory not found";
 			res.status(200);
-			res.json(result);		
+			res.json(result);
 		}
 	  }, function(error) {
 			result.status = "500";
@@ -221,7 +223,7 @@ router.post('/create', function(req, res){
 						result.description = "inventory created";
 						result.status = "200";
 						result.errors = [];
-						result.data = inventory
+						result.data = inventory;
 						res.json(result);
 					},
 					function(err) {
@@ -229,7 +231,7 @@ router.post('/create', function(req, res){
 						result.description = "internal server error";
 						result.status = "500";
 						result.errors = err;
-						result.data = []
+						result.data = [];
 						res.json(result);
 					});
 				}
@@ -313,7 +315,7 @@ router.put('/update/:id', function(req, res){
 					"data" : {
 						"recordsUpdated" : ""
 					}	
-				}
+				};
 	//send all validation errors
 	if (errors) {
 		res.status(200);
